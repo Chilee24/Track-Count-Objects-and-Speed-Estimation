@@ -11,7 +11,7 @@ CLASSES = ["person", "bicycle", "car", "motorbike", "aeroplane", "bus", "train",
            "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
            "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
            "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "sofa",
-           "pottedplant", "bed", "diningtable", "toilet", "tvmonitor", "laptop", "mouse", "remote", "keyboard",
+           "bed", "toilet", "laptop", "mouse", "remote", "keyboard",
            "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
            "teddy bear", "hair drier", "toothbrush"]
 VEHICLE_CLASSES = [1, 2, 3, 5, 7]
@@ -19,16 +19,8 @@ VEHICLE_CLASSES = [1, 2, 3, 5, 7]
 CONFIDENCE_SETTING = 0.4
 MAX_DISTANCE = 80
 
-def get_output_layers(net):
-    try:
-        layer_names = net.getLayerNames()
-        output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-        return output_layers
-    except:
-        print("Can't get output layers")
-        return None
 
-def detections_yolov8(model, image, confidence_setting, frame_w, frame_h, classes=None):
+def detections_yolov8(model, image, confidence_setting, classes=None):
     results = model(image)[0]
     boxes = []
     class_ids = []
@@ -48,6 +40,7 @@ def detections_yolov8(model, image, confidence_setting, frame_w, frame_h, classe
             boxes.append([x, y, w, h])
     return boxes, class_ids, confidences
 
+
 def draw_prediction(classes, colors, img, class_id, confidence, x, y, width, height):
     try:
         label = str(classes[class_id])
@@ -66,13 +59,16 @@ def draw_prediction(classes, colors, img, class_id, confidence, x, y, width, hei
     except (Exception, cv2.error) as e:
         print("Can't draw prediction for class_id {}: {}".format(class_id, e))
 
+
 def check_location(box_y, box_height, height):
     center_y = int(box_y + box_height / 2.0)
     return center_y > height - END_POINT
 
+
 def check_start_line(box_y, box_height):
     center_y = int(box_y + box_height / 2.0)
     return center_y > START_POINT
+
 
 def counting_vehicle_yolov8(video_input, video_output, skip_frame=1):
     colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
@@ -81,11 +77,15 @@ def counting_vehicle_yolov8(video_input, video_output, skip_frame=1):
 
     cap = cv2.VideoCapture(video_input)
     ret_val, frame = cap.read()
+    if not ret_val:
+        print("Error: Could not read video file")
+        return
+
     width = frame.shape[1]
     height = frame.shape[0]
 
     video_format = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter(video_output, video_format, 25, (width, height))
+    out = cv2.VideoWriter(video_output, video_format, 30, (width, height))
 
     list_object = []
     number_frame = 0
@@ -116,7 +116,7 @@ def counting_vehicle_yolov8(video_input, video_output, skip_frame=1):
 
         if number_frame % skip_frame == 0:
             boxes, class_ids, confidences = detections_yolov8(model, frame, CONFIDENCE_SETTING,
-                                                              width, height, classes=CLASSES)
+                                                              classes=CLASSES)
             for idx, box in enumerate(boxes):
                 box_x, box_y, box_width, box_height = box
                 if not check_location(box_y, box_height, height):
@@ -158,5 +158,6 @@ def counting_vehicle_yolov8(video_input, video_output, skip_frame=1):
     out.release()
     cv2.destroyAllWindows()
 
+
 if __name__ == '__main__':
-    counting_vehicle_yolov8('videoTest\\highway.mp4', 'vehicles_yolov8.avi')
+    counting_vehicle_yolov8('videoTest/highway.mp4', 'vehicles_yolov8.mp4')
