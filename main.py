@@ -84,7 +84,7 @@ def counting_vehicle_yolov8(video_input, video_output, skip_frame=1):
     width = frame.shape[1]
     height = frame.shape[0]
 
-    video_format = cv2.VideoWriter_fourcc(*'XVID')
+    video_format = cv2.VideoWriter_fourcc(*'mp4v')
     out = cv2.VideoWriter(video_output, video_format, 30, (width, height))
 
     list_object = []
@@ -133,7 +133,7 @@ def counting_vehicle_yolov8(video_input, video_output, skip_frame=1):
                             check_new_object = False
                             break
                     if check_new_object and check_start_line(box_y, box_height):
-                        new_tracker = cv2.TrackerKCF_create()
+                        new_tracker = cv2.legacy.TrackerMOSSE_create()
                         new_tracker.init(frame, tuple(box))
                         new_object = {
                             'id': class_ids[idx],
